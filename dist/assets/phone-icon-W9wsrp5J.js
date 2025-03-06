@@ -1,0 +1,1 @@
+import{d as e,c as o,u as n,p as c,o as _,_ as a}from"./index-Bu-wPQDb.js";const p=e({__name:"phone-icon",setup(s){return(t,r)=>(_(),o(n(c)))}}),u=a(p,[["__file","phone-icon.vue"]]);export{u as default};

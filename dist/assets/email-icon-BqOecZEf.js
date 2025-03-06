@@ -1,0 +1,1 @@
+import{d as e,c as a,u as o,o as s,m as c,_ as n}from"./index-Bu-wPQDb.js";const _=e({__name:"email-icon",setup(t){return(r,m)=>(s(),a(o(c)))}}),f=n(_,[["__file","email-icon.vue"]]);export{f as default};
