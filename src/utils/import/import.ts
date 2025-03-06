@@ -751,6 +751,34 @@ async function getRecordIdList(
   return recordIds
 }
 
+
+
+async function getRecordsStringValueByPage(table: ITable) {
+  let hasMore = true
+  let pageToken: number | undefined = void 0
+  let res: IRecord[] = []
+  while (hasMore) {
+    const {
+      hasMore: canNext,
+      records,
+      pageToken: token,
+    } = await asyncRetry(
+      async () =>
+        await table.getRecordsByPage({
+          pageToken,
+          // @ts-ignore
+          stringValue: true,
+        }),
+    )
+    hasMore = canNext
+    pageToken = token
+    res = res.concat(records)
+  }
+  return res;
+}
+
+
+
 /**
  * Get the index value of the table
  *
@@ -776,7 +804,7 @@ async function getTableIndex(
     fieldMaps: fieldMap[]
   }[] = await Promise.all(
     index.map(async (i) => {
-      const field = await table.getField(i.field.id)
+      // const field = await table.getField(i.field.id)
       lifeCircleHook(importLifeCircles.onReadFieldMap, {
         stage: "readFieldMap",
         data: {
@@ -789,19 +817,30 @@ async function getTableIndex(
           },
         },
       })
-      const values = await getFieldStringValue(field, recordIds, lifeCircleHook)
+      // const values = await getFieldStringValue(field, recordIds, lifeCircleHook);
       return {
-        values,
+        // values,
         fieldMap: i,
       }
     }),
   ).then(async (res) => {
+    const recordsValue = await getRecordsStringValueByPage(table)
+    const recordsValueMap: Map<string, { [fieldId: string]: string }> = new Map();
+    recordsValue.forEach((v) => {
+      recordsValueMap.set(v.recordId, v.fields as ({ [fieldId: string]: string; }))
+    })
+    return {
+      res,
+      recordsValueMap,
+    };
+  }).then(async (_res) => {
     // console.log("res", res)
+    const { res, recordsValueMap } = _res;
     return Promise.all(
       recordIds.map(async (i) => {
         const indexValue: (string | string[])[] = []
         for (const j of res) {
-          const value = j.values.find((v) => v.recordId === i)?.value ?? ""
+          const value =recordsValueMap.get(i)?.[j.fieldMap.key] ?? ""; // j.values.find((v) => v.recordId === i)?.value ?? ""
           lifeCircleHook(importLifeCircles.onReadFieldMap, {
             stage: "readFieldMap",
             data: {
